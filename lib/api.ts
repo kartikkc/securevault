@@ -93,7 +93,7 @@ export async function getMasterString(authToken?: string): Promise<MasterStringR
 const token = authToken ?? (typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null);
 if(!token) throw new Error('Missing Auth Token');
 
-return apiFetch<MasterStringRequest>('/masterkey', {
+return apiFetch<MasterStringRequest>('/password/masterkey', {
   headers: {
     Authorization : `${token}`,
   },

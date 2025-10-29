@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
 import { ThemeToggle } from './ThemeToggle';
+import { getMasterString } from '@/lib/api';
 
 interface DashboardProps {
   user: { name: string };
@@ -195,146 +196,147 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
               whileHover={{ y: -5, scale: 1.02 }}
+              onClick={()=>{ console.log(getMasterString())}}
             >
-              <Card className="p-6 bg-gradient-to-br from-card to-accent/20 border-2 hover:border-primary/20 transition-all">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-semibold">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  </div>
-                  <motion.div
-                    className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} p-3`}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                  >
-                    <stat.icon className="w-full h-full text-white" />
-                  </motion.div>
-                </div>
-              </Card>
-            </motion.div> ))}
-        </div>  
-        {/* Search and Filter Bar */}
-        <motion.div
-          className="flex flex-col md:flex-row gap-4 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search passwords..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-card border-border"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <motion.div key={category} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                  className="transition-all"
-                >
-                  {category}
-                </Button>
-              </motion.div>
-            ))}
-          </div>
-
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-primary hover:bg-primary/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Password
-                </Button>
-              </motion.div>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Password</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="new-website">Website</Label>
-                  <Input id="new-website" placeholder="example.com" />
-                </div>
-                <div>
-                  <Label htmlFor="new-username">Username/Email</Label>
-                  <Input id="new-username" placeholder="your@email.com" />
-                </div>
-                <div>
-                  <Label htmlFor="new-password">Password</Label>
-                  <Input id="new-password" type="password" placeholder="Your secure password" />
-                </div>
-                <Button className="w-full">Save Password</Button>
+          <Card className="p-6 bg-gradient-to-br from-card to-accent/20 border-2 hover:border-primary/20 transition-all cursor-pointer">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-semibold">{stat.label}</p>
+                {/* <p className="text-sm text-muted-foreground">{stat.label}</p> */}
               </div>
-            </DialogContent>
-          </Dialog>
-        </motion.div>
+              <motion.div
+                className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} p-3`}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <stat.icon className="w-full h-full text-white" />
+              </motion.div>
+            </div>
+          </Card>
+        </motion.div> ))}
+      </div>
+      {/* Search and Filter Bar */}
+      <motion.div
+        className="flex flex-col md:flex-row gap-4 mb-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search passwords..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 bg-card border-border"
+          />
+        </div>
 
-        {/* Password List */}
-        <div className="space-y-4">
-          <AnimatePresence>
-            {filteredPasswords.map((password, index) => {
-              // const StrengthIcon = getStrengthIcon(password.strength);
-              return (
-                <motion.div
-                  key={password.id}
-                  layout
-                  initial={{ opacity: 0, x: -20, rotateY: -5 }}
-                  animate={{ opacity: 1, x: 0, rotateY: 0 }}
-                  exit={{ opacity: 0, x: 20, rotateY: 5 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  whileHover={{ y: -2, scale: 1.01 }}
-                >
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border hover:border-primary/20 transition-all">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
-                        <motion.div
-                          className="w-12 h-12 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center"
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                        >
-                          <Globe className="h-6 w-6 text-primary" />
-                        </motion.div>
+        <div className="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <motion.div key={category} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className="transition-all"
+              >
+                {category}
+              </Button>
+            </motion.div>
+          ))}
+        </div>
 
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2">
-                            <h3 className="font-semibold">{password.website}</h3>
-                            <Badge variant="secondary" className="text-xs">
-                              {/* {password.category} */}
-                            </Badge>
-                          </div>
-                          {/* <p className="text-sm text-muted-foreground">{password.username}</p> */}
-                          <div className="flex items-center space-x-2 mt-1">
-                            {/* <StrengthIcon className={`h-4 w-4 ${getStrengthColor(password.strength)}`} /> */}
-                            {/* <span className={`text-xs capitalize ${getStrengthColor(password.strength)}`}> */}
-                            {/* {password.strength} */}
-                            {/* </span> */}
-                            {/* <span className="text-xs text-muted-foreground"> */}
-                            {/* • Last used {password.lastUsed} */}
-                            {/* </span> */}
-                          </div>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Password
+              </Button>
+            </motion.div>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Password</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="new-website">Website</Label>
+                <Input id="new-website" placeholder="example.com" />
+              </div>
+              <div>
+                <Label htmlFor="new-username">Username/Email</Label>
+                <Input id="new-username" placeholder="your@email.com" />
+              </div>
+              <div>
+                <Label htmlFor="new-password">Password</Label>
+                <Input id="new-password" type="password" placeholder="Your secure password" />
+              </div>
+              <Button className="w-full">Save Password</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </motion.div>
+
+      {/* Password List */}
+      <div className="space-y-4">
+        <AnimatePresence>
+          {filteredPasswords.map((password, index) => {
+            // const StrengthIcon = getStrengthIcon(password.strength);
+            return (
+              <motion.div
+                key={password.id}
+                layout
+                initial={{ opacity: 0, x: -20, rotateY: -5 }}
+                animate={{ opacity: 1, x: 0, rotateY: 0 }}
+                exit={{ opacity: 0, x: 20, rotateY: 5 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                whileHover={{ y: -2, scale: 1.01 }}
+              >
+                <Card className="p-6 bg-card/60 backdrop-blur-sm border hover:border-primary/20 transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 flex-1">
+                      <motion.div
+                        className="w-12 h-12 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 flex items-center justify-center"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                      >
+                        <Globe className="h-6 w-6 text-primary" />
+                      </motion.div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-semibold">{password.website}</h3>
+                          <Badge variant="secondary" className="text-xs">
+                            {/* {password.category} */}
+                          </Badge>
+                        </div>
+                        {/* <p className="text-sm text-muted-foreground">{password.username}</p> */}
+                        <div className="flex items-center space-x-2 mt-1">
+                          {/* <StrengthIcon className={`h-4 w-4 ${getStrengthColor(password.strength)}`} /> */}
+                          {/* <span className={`text-xs capitalize ${getStrengthColor(password.strength)}`}> */}
+                          {/* {password.strength} */}
+                          {/* </span> */}
+                          {/* <span className="text-xs text-muted-foreground"> */}
+                          {/* • Last used {password.lastUsed} */}
+                          {/* </span> */}
                         </div>
                       </div>
+                    </div>
 
-                      <div className="flex items-center space-x-2">
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowPasswordId(
-                              showPasswordId === password.id ? null : password.id
-                            )}
-                          >
-                            {showPasswordId === password.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </motion.div>
+                    <div className="flex items-center space-x-2">
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowPasswordId(
+                            showPasswordId === password.id ? null : password.id
+                          )}
+                        >
+                          {showPasswordId === password.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </motion.div>
 
-                        {/* <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      {/* <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -344,79 +346,79 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                           </Button>
                         </motion.div> */}
 
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </motion.div>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Button variant="ghost" size="sm">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </motion.div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
+                  </div>
 
-                    <AnimatePresence>
-                      {showPasswordId === password.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mt-4 pt-4 border-t border-border"
-                        >
-                          <div className="bg-accent/20 rounded-lg p-3 font-mono text-sm">
-                            <div className="flex items-center justify-between">
-                              {/* <span>{password.password}</span> */}
-                              {/* <Button
+                  <AnimatePresence>
+                    {showPasswordId === password.id && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4 pt-4 border-t border-border"
+                      >
+                        <div className="bg-accent/20 rounded-lg p-3 font-mono text-sm">
+                          <div className="flex items-center justify-between">
+                            {/* <span>{password.password}</span> */}
+                            {/* <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => copyToClipboard(password.password)}
                               >
                                 <Copy className="h-3 w-3" />
                               </Button> */}
-                            </div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-
-        {filteredPasswords.length === 0 && (
-          <motion.div
-            className="text-center py-16"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Lock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No passwords found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchTerm || selectedCategory !== 'All'
-                ? 'Try adjusting your search or filters'
-                : 'Start by adding your first password'}
-            </p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Password
-            </Button>
-          </motion.div>
-        )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
+
+      {filteredPasswords.length === 0 && (
+        <motion.div
+          className="text-center py-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Lock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-semibold mb-2">No passwords found</h3>
+          <p className="text-muted-foreground mb-6">
+            {searchTerm || selectedCategory !== 'All'
+              ? 'Try adjusting your search or filters'
+              : 'Start by adding your first password'}
+          </p>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Password
+          </Button>
+        </motion.div>
+      )}
     </div>
+    </div >
   );
 }
