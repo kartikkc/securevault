@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from './ui/badge';
 import { ThemeToggle } from './ThemeToggle';
 import { getMasterString, generatePassword } from '@/lib/api';
+import { DialogClose } from '@radix-ui/react-dialog';
 
 interface DashboardProps {
   user: { name: string };
@@ -60,6 +61,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isMasterDialogOpen, setIsMasterDialogOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [viewMasterKey, setViewMasterKey] = useState(false);
 
   const categories = ['All', 'Email', 'Social', 'Finance', 'Development', 'Shopping'];
@@ -105,17 +107,35 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
     }
   }
 
-  const handleGeneratedPassword = async () => {
-    try{
-      let genPasswd: object = await generatePassword(website);
-      setGeneratedPassword(genPasswd.hashedPassword);
+  const handleGenerate = async () => {
+    try {
+      if(!website.trim()){
+        alert("Please enter the website");
+        return; 
+      }
+      let genPasswd: object = await generatePassword({ "website": website });
+      let passwdgen = genPasswd.hashedPassword;
+      setGeneratedPassword(passwdgen);
       return generatedPassword;
     }
-    catch(error){
+    catch (error) {
       console.log('Fail to generate the Password:', error);
       return error;
     }
   }
+
+  const handleSave = () => {
+    if(generatedPassword != ''){
+      alert('Password Saved!');
+      setWebsite('');
+      setGeneratedPassword('');
+      setIsAddDialogOpen(false);
+    }
+    else{
+      alert('Please Generate the Password');
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-secondary/10">
       {/* Header */}
@@ -275,8 +295,8 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                 </DialogHeader>
                 <div className="space-y-4 py-2">
                   <div>
-                    <Label htmlFor="new-website" className='my-3'>Website</Label>
-                    <Input id="new-website" placeholder="example.com" value={website} onChange={(e: React.ChangeEvent<HTMLInputElement>)=>setWebsite(e.target.value)}/>
+                    <Label htmlFor="new-website" className='my-3' >Website</Label>
+                    <Input id="new-website" placeholder="example.com" value={website} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWebsite(e.target.value)}  required/>
                   </div>
                   <div>
                     <Label htmlFor="new-username" className='my-3'>Username/Email</Label>
@@ -284,7 +304,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                   </div>
                   <div>
                     <Label htmlFor="new-password" className='my-3'>Password</Label>
-                    <Input id="new-password" type="password" placeholder="Your secure password" />
+                    <Input id="new-password" type={showPassword ? "text" : "password"} placeholder="Your secure password" value={generatedPassword} />
                     <button
                       type="button"
                       onClick={() => { }}
@@ -292,10 +312,17 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                     >
                       {<Copy className="h-4 w-4" />}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-17 top-72 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mt-5'>
-                    <Button className='w-50 bg-transparent text-white hover:text-black cursor-pointer' onClick={()=>{console.log(website);handleGeneratedPassword(); console.log(generatedPassword)}}>Generate <Key className='w-4 h-4' /></Button>
-                    <Button className='w-50 cursor-pointer'>Save Password</Button>
+                    <Button className='w-50 bg-transparent text-white hover:text-black cursor-pointer md:w-full' onClick={() => { handleGenerate(); console.log(generatedPassword) }}>Generate <Key className='w-4 h-4' /></Button>
+                    <Button className='w-50 cursor-pointer md:w-full' onClick={() => { handleSave() }}>Save Password</Button>
                   </div>
                 </div>
               </motion.div>

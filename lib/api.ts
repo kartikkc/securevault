@@ -1,10 +1,13 @@
 import { error } from "console";
 import Head from "next/head";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://securepass-backend.vercel.app/api';
+
+// Declared the BASE URL 
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api'; 
+// ??'https://securepass-backend.vercel.app/api';
 
 type JsonRecord = Record<string, unknown>;
-
+// Custom function to use the fetch api
 async function apiFetch<TResponse = JsonRecord>(
   path: string,
   init: RequestInit = {}
@@ -18,10 +21,9 @@ async function apiFetch<TResponse = JsonRecord>(
     },
     ...init,
   });
-
+// Handle the response text
   let data: unknown = null;
   const text = await response.text();
-  console.log(text);
   try {
     data = text ? JSON.parse(text) : null;
   } catch (err) {
@@ -29,6 +31,7 @@ async function apiFetch<TResponse = JsonRecord>(
     data = text as unknown;
   }
 
+  // If the response is not ok the response is sent here
   if (!response.ok) {
     const extractedMessage =
       data && typeof data === 'object' && (data as JsonRecord) && 'message' in (data as JsonRecord)
@@ -41,6 +44,7 @@ async function apiFetch<TResponse = JsonRecord>(
   return data as TResponse;
 }
 
+// Interfaces to create the request body
 export interface LoginRequest {
   email: string;
   password: string;
@@ -60,9 +64,24 @@ export interface AuthResponse {
   message?: string;
 }
 
-export interface MasterStringRequest {
+export interface MasterStringResponse {
   token?: string;
   masterString: string;
+}
+
+export interface GeneratePasswordRequest{
+  website: string;
+}
+export interface PasswordItem {
+  id: string;
+  website: string;
+  algorithm?: string;
+  username?: string;
+  password?: string;
+  category?: string;
+  lastUsed?: string;
+  masg?: string;
+  strength?: 'weak' | 'medium' | 'strong';
 }
 
 export async function login(request: LoginRequest): Promise<AuthResponse> {
@@ -80,23 +99,11 @@ export async function signup(request: SignupRequest): Promise<AuthResponse> {
   });
 }
 
-export interface PasswordItem {
-  id: string;
-  website: string;
-  algorithm?: string;
-  username?: string;
-  password?: string;
-  category?: string;
-  lastUsed?: string;
-  masg?: string;
-  strength?: 'weak' | 'medium' | 'strong';
-}
-
-export async function getMasterString(authToken?: string): Promise<MasterStringRequest> {
+export async function getMasterString(authToken?: string): Promise<MasterStringResponse> {
   const token = authToken ?? (typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null);
   if (!token) throw new Error('Missing Auth Token');
 
-  return apiFetch<MasterStringRequest>('/password/masterkey', {
+  return apiFetch<MasterStringResponse>('/password/masterkey', {
     headers: {
       Authorization: `${token}`,
     },
@@ -113,17 +120,18 @@ export async function getPasswords(authToken?: string): Promise<PasswordItem[]> 
     },
   });
 }
-export async function generatePassword(website:string, authToken?: string): Promise<PasswordItem> {
-  let web1: object = {'website' : website};
-  const token = authToken ?? (typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null);
-  if (!token) throw new Error('Missing Auth Token');
 
-  const response1 = await apiFetch<PasswordItem>('/password/generate', {
+
+export async function generatePassword(request: GeneratePasswordRequest): Promise<GeneratePasswordRequest> {
+  const token =sessionStorage.getItem('auth_token');
+  if (!token) throw new Error('Missing Auth Token');
+  return apiFetch<PasswordItem>('/password/generate', {
     method: 'POST',
     headers: {
+      'Content-type': 'application/json', 
       Authorization: `${token}`,
     },
-    body: JSON.stringify({ web1 })
+    body: JSON.stringify(request),
   })
-  return response1;
+  // return response1;
 }
