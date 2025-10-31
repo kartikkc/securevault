@@ -33,7 +33,7 @@ import { DialogClose } from '@radix-ui/react-dialog';
 import { toast, Toaster } from 'sonner';
 
 interface DashboardProps {
-  user: { name: string };
+  user: { email: string };
   passwords: { id: string; website: string }[];
   onLogout: () => void;
 }
