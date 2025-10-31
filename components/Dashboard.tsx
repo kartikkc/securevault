@@ -29,6 +29,7 @@ import { Badge } from './ui/badge';
 import { ThemeToggle } from './ThemeToggle';
 import { getMasterString, generatePassword } from '@/lib/api';
 import { DialogClose } from '@radix-ui/react-dialog';
+import { toast, Toaster } from 'sonner';
 
 interface DashboardProps {
   user: { name: string };
@@ -307,7 +308,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                     <Input id="new-password" type={showPassword ? "text" : "password"} placeholder="Your secure password" value={generatedPassword} />
                     <button
                       type="button"
-                      onClick={() => { }}
+                      onClick={() => { copyToClipboard(generatedPassword); toast.success('Text Copied'); console.log('Toast Triggered!');}}
                       className=" absolute right-10 top-72 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       {<Copy className="h-4 w-4" />}
@@ -471,6 +472,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
           </motion.div>
         )}
       </div>
+      <Toaster richColors/>
     </div >
   );
 }
