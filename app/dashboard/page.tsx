@@ -9,6 +9,7 @@ import { getPasswords, type PasswordItem } from '@/lib/api'
 
 
 interface User {
+  email:string,
   name: string
 }
 
@@ -26,8 +27,8 @@ export default function DashboardPage() {
     // Check for user authentication
     const userData = sessionStorage.getItem('auth_token')
     if (userData) {
-      const decoded = jwtDecode<{ name: string }>(userData)
-      const user1 = { name: decoded.name }
+      const decoded = jwtDecode<{ name: string, email:string }>(userData)
+      const user1 = { name: decoded.name, email: decoded.email }
       setUser(user1);
       getPasswords(userData)
         .then((items) => setPasswords(items))
@@ -57,5 +58,5 @@ export default function DashboardPage() {
     return null // This will be brief as useEffect will redirect
   }
 
-  return <Dashboard user={user} passwords={passwords} onLogout={handleLogout} />
+  return <Dashboard user={user} onLogout={handleLogout} />
 }

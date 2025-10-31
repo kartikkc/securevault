@@ -3,7 +3,7 @@ import Head from "next/head";
 
 
 // Declared the BASE URL 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api';
 
 type JsonRecord = Record<string, unknown>;
 // Custom function to use the fetch api
@@ -70,8 +70,11 @@ export interface MasterStringResponse {
 
 export interface GeneratePasswordRequest {
   website: string;
+  hashedPassword?: string;
+  genPassword?: string;
 }
 export interface PasswordItem {
+  _id?: string;
   id: string;
   website: string;
   algorithm?: string;
@@ -128,8 +131,8 @@ export async function getPasswords(authToken?: string): Promise<PasswordItem[]> 
     },
   });
   return respone.map(item => ({
-    id: item._id,
-    website: item.website,
+    id: item._id ?? ' ',
+    website: item.website ?? ' ',
     algorithm: item.algorithm,
     username: item.username,
     password: item.password,

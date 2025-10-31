@@ -28,13 +28,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
 import { ThemeToggle } from './ThemeToggle';
-import { getMasterString, generatePassword, getPasswords, getOnePassword, deleteOnePassword, updateOnePassword } from '@/lib/api';
+import { getMasterString, generatePassword, getPasswords, getOnePassword, deleteOnePassword, updateOnePassword, GeneratePasswordRequest } from '@/lib/api';
 import { DialogClose } from '@radix-ui/react-dialog';
 import { toast, Toaster } from 'sonner';
 
 interface DashboardProps {
   user: { email: string };
-  passwords: { id: string; website: string }[];
   onLogout: () => void;
 }
 
@@ -46,6 +45,15 @@ interface PasswordEntry {
   category?: string;
   lastUsed?: string;
   strength?: 'weak' | 'medium' | 'strong';
+}
+
+interface MasterStringEntry {
+  masterString: string;
+}
+
+interface PasswordGenerateEntry {
+  website?: string;
+  hashedPassword?: string,
 }
 
 const mockPasswords: PasswordEntry[] = [];
@@ -120,7 +128,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   };
   const handleMasterString = async () => {
     try {
-      let mainPassword: object = await getMasterString();
+      let mainPassword: MasterStringEntry = await getMasterString();
       setMasterString(mainPassword.masterString);
       return masterString;
     }
@@ -137,9 +145,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         toast.error("Please enter the website");
         return;
       }
-      let genPasswd: object = await generatePassword({ "website": website });
+      let genPasswd: PasswordGenerateEntry = await generatePassword({ "website": website });
       let passwdgen = genPasswd.hashedPassword;
-      setGeneratedPassword(passwdgen);
+      if (passwdgen != undefined)
+        setGeneratedPassword(passwdgen);
       return generatedPassword;
     }
     catch (error) {
@@ -164,8 +173,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
   const handleview = async (oneId: string) => {
     try {
-      let password = await getOnePassword(oneId);
-      setPasswordId(password.genPassword);
+      let password: GeneratePasswordRequest = await getOnePassword(oneId);
+      if (password.genPassword != undefined) {
+        setPasswordId(password.genPassword);
+      }
     } catch (error) {
       // console.log("Error Fetching One Password:", error);
       toast.error("Something Went Wrong");
@@ -215,7 +226,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             <Shield className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-xl font-semibold">SecureVault</h1>
-              <p className="text-sm text-muted-foreground">Welcome back, {user.name}</p>
+              <p className="text-sm text-muted-foreground">Welcome back, {user.email}</p>
             </div>
           </motion.div>
 
