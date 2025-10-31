@@ -7,6 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles/globals.css';
 import { Toaster } from './components/ui/sonner';
+import { getPasswords } from './lib/api';
 
 type View = 'landing' | 'login' | 'signup' | 'dashboard';
 
@@ -29,28 +30,28 @@ function AppContent() {
   };
 
   return (
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-        {currentView === 'landing' && (
-          <ErrorBoundary>
-            <LandingPage onNavigate={navigateTo} />
-          </ErrorBoundary>
-        )}
-        {currentView === 'login' && (
-          <ErrorBoundary>
-            <LoginPage onLogin={handleLogin} onNavigate={navigateTo} />
-          </ErrorBoundary>
-        )}
-        {currentView === 'signup' && (
-          <ErrorBoundary>
-            <SignupPage onSignup={handleLogin} onNavigate={navigateTo} />
-          </ErrorBoundary>
-        )}
-        {currentView === 'dashboard' && user && (
-          <ErrorBoundary>
-            <Dashboard user={user} onLogout={handleLogout} />
-          </ErrorBoundary>
-        )}
-      </div>
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      {currentView === 'landing' && (
+        <ErrorBoundary>
+          <LandingPage onNavigate={navigateTo} />
+        </ErrorBoundary>
+      )}
+      {currentView === 'login' && (
+        <ErrorBoundary>
+          <LoginPage onLogin={handleLogin} onNavigate={navigateTo} />
+        </ErrorBoundary>
+      )}
+      {currentView === 'signup' && (
+        <ErrorBoundary>
+          <SignupPage onSignup={handleLogin} onNavigate={navigateTo} />
+        </ErrorBoundary>
+      )}
+      {currentView === 'dashboard' && user && (
+        <ErrorBoundary>
+          <Dashboard user={user} onLogout={handleLogout} />
+        </ErrorBoundary>
+      )}
+    </div>
   );
 }
 

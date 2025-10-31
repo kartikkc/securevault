@@ -7,6 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { ThemeToggle } from './ThemeToggle';
 import { login } from '@/lib/api';
+import {Toaster, toast} from 'sonner';
 
 interface LoginPageProps {
   onLogin: (email: string) => void;
@@ -31,7 +32,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
       onLogin(email);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
-      alert(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -39,6 +40,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 bg-gradient-to-br from-background via-accent/20 to-secondary/20 overflow-hidden">
+      <Toaster richColors/>
       {/* Floating background elements */}
       <motion.div
         className="absolute inset-0 pointer-events-none"

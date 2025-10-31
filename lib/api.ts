@@ -3,8 +3,7 @@ import Head from "next/head";
 
 
 // Declared the BASE URL 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api'; 
-// ??'https://securepass-backend.vercel.app/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ??'https://securepass-backend.vercel.app/api';
 
 type JsonRecord = Record<string, unknown>;
 // Custom function to use the fetch api
@@ -21,7 +20,7 @@ async function apiFetch<TResponse = JsonRecord>(
     },
     ...init,
   });
-// Handle the response text
+  // Handle the response text
   let data: unknown = null;
   const text = await response.text();
   try {
@@ -69,7 +68,7 @@ export interface MasterStringResponse {
   masterString: string;
 }
 
-export interface GeneratePasswordRequest{
+export interface GeneratePasswordRequest {
   website: string;
 }
 export interface PasswordItem {
@@ -82,6 +81,15 @@ export interface PasswordItem {
   lastUsed?: string;
   masg?: string;
   strength?: 'weak' | 'medium' | 'strong';
+}
+
+export interface deletePasswordResponse {
+  message: string;
+}
+
+export interface updatePasswordResponse {
+  message: string;
+  password: string;
 }
 
 export async function login(request: LoginRequest): Promise<AuthResponse> {
@@ -114,24 +122,71 @@ export async function getPasswords(authToken?: string): Promise<PasswordItem[]> 
   const token = authToken ?? (typeof window !== 'undefined' ? sessionStorage.getItem('auth_token') : null);
   if (!token) throw new Error('Missing auth token');
 
-  return apiFetch<PasswordItem[]>('/passwords', {
+  const respone = await apiFetch<PasswordItem[]>('/password', {
     headers: {
       Authorization: `${token}`,
     },
   });
+  return respone.map(item => ({
+    id: item._id,
+    website: item.website,
+    algorithm: item.algorithm,
+    username: item.username,
+    password: item.password,
+    category: item.category,
+    lastUsed: item.lastUsed,
+    strength: item.strength,
+  }));
 }
 
 
 export async function generatePassword(request: GeneratePasswordRequest): Promise<GeneratePasswordRequest> {
-  const token =sessionStorage.getItem('auth_token');
+  const token = sessionStorage.getItem('auth_token');
   if (!token) throw new Error('Missing Auth Token');
   return apiFetch<PasswordItem>('/password/generate', {
     method: 'POST',
     headers: {
-      'Content-type': 'application/json', 
+      'Content-type': 'application/json',
       Authorization: `${token}`,
     },
     body: JSON.stringify(request),
   })
   // return response1;
+}
+
+
+export async function getOnePassword(id: string): Promise<GeneratePasswordRequest> {
+  const token = sessionStorage.getItem('auth_token');
+  if (!token) throw new Error('Missing auth Token');
+
+  return apiFetch<PasswordItem>(`/password/one/${id}`, {
+    headers: {
+      Authorization: `${token}`,
+    }
+  })
+}
+
+
+export async function deleteOnePassword(id: string): Promise<deletePasswordResponse> {
+  const token = sessionStorage.getItem('auth_token');
+  if (!token) throw new Error('Missing auth Token');
+  return apiFetch<deletePasswordResponse>(`/password/delete/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-type': 'application/json',
+      Authorization: `${token}`
+    }
+  })
+}
+
+export async function updateOnePassword(id: string): Promise<updatePasswordResponse> {
+  const token = sessionStorage.getItem('auth_token');
+  if (!token) throw new Error('Missing auth Token');
+  return apiFetch<updatePasswordResponse>(`/password/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-type': 'application/json',
+      Authorization: `${token}`,
+    }
+  })
 }

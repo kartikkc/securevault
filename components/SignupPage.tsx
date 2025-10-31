@@ -7,6 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { ThemeToggle } from './ThemeToggle';
 import { signup } from '@/lib/api';
+import { Toaster, toast } from 'sonner';
 
 interface SignupPageProps {
   onSignup: (email: string) => void;
@@ -37,11 +38,12 @@ export function SignupPage({ onSignup, onNavigate }: SignupPageProps) {
       const token = result?.token;
       if (token) {
         sessionStorage.setItem('auth_token', token);
+        toast.success('Account Created');
       }
       onSignup(email);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Signup failed';
-      alert(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +72,7 @@ export function SignupPage({ onSignup, onNavigate }: SignupPageProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-gradient-to-br from-background via-accent/20 to-secondary/20 overflow-hidden">
+      <Toaster richColors />
       {/* Floating background elements */}
       <motion.div
         className="absolute inset-0 pointer-events-none"

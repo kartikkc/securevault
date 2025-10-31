@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Shield,
@@ -17,7 +17,8 @@ import {
   Lock,
   AlertCircle,
   CheckCircle2,
-  MoreVertical
+  MoreVertical,
+  Ghost
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -27,7 +28,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
 import { ThemeToggle } from './ThemeToggle';
-import { getMasterString, generatePassword } from '@/lib/api';
+import { getMasterString, generatePassword, getPasswords, getOnePassword, deleteOnePassword, updateOnePassword } from '@/lib/api';
 import { DialogClose } from '@radix-ui/react-dialog';
 import { toast, Toaster } from 'sonner';
 
@@ -40,20 +41,24 @@ interface DashboardProps {
 interface PasswordEntry {
   id: string;
   website: string;
-  // username: string;
-  // password: string;
-  // category: string;
-  // lastUsed: string;
-  // strength: 'weak' | 'medium' | 'strong';
+  username?: string;
+  password?: string;
+  category?: string;
+  lastUsed?: string;
+  strength?: 'weak' | 'medium' | 'strong';
 }
 
 const mockPasswords: PasswordEntry[] = [];
 const emptyPasswords: PasswordEntry[] = [];
+export function Dashboard({ user, onLogout }: DashboardProps) {
+  useEffect(() => {
+    loadPasswords();
+  }, []);
 
-// export function Dashboard({ user, onLogout }: DashboardProps) {
-// const [passwords, setPasswords] = useState<PasswordEntry[]>(mockPasswords);
-export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
-  const [/*unused*/, /*setUnused*/] = useState<boolean>(false);
+  // export function Dashboard({ user, onLogout }: DashboardProps) {
+  // const [passwords, setPasswords] = useState<PasswordEntry[]>(mockPasswords);
+  const [passwords, setPasswords] = useState(emptyPasswords);
+  const [passwrodId, setPasswordId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showPasswordId, setShowPasswordId] = useState<string | null>(null);
   const [masterString, setMasterString] = useState('');
@@ -66,7 +71,16 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
   const [viewMasterKey, setViewMasterKey] = useState(false);
 
   const categories = ['All', 'Email', 'Social', 'Finance', 'Development', 'Shopping'];
-  const sourcePasswords: PasswordEntry[] = passwords ?? emptyPasswords;
+  const loadPasswords = async () => {
+    try {
+      const data = await getPasswords();
+      setPasswords(data);
+    } catch (error) {
+      console.error("Failed to fetch passwords:", error);
+      toast.error("Failed to fetch passwords");
+    }
+  };
+  const sourcePasswords: PasswordEntry[] = passwords ?? getPasswords();
   const filteredPasswords = sourcePasswords.filter(password => {
     const matchesSearch = password.website.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (searchTerm.toLowerCase());
@@ -75,7 +89,15 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
   });
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    try {
+
+      navigator.clipboard.writeText(text);
+      toast.success('Text Copied to the clipboard');
+    }
+    catch (error) {
+      console.log("Failed to copy text:", error);
+      toast.error('Failed to Copy text');
+    }
     // You could add a toast notification here
   };
 
@@ -103,16 +125,17 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
       return masterString;
     }
     catch (err) {
-      console.log('Failed to fetch master string: ', err);
+      // console.log('Failed to fetch master string: ', err);
+      toast.error('Fail to Fetch Master String, Something went wrong.');
       return 'Server Error';
     }
   }
 
   const handleGenerate = async () => {
     try {
-      if(!website.trim()){
-        alert("Please enter the website");
-        return; 
+      if (!website.trim()) {
+        toast.error("Please enter the website");
+        return;
       }
       let genPasswd: object = await generatePassword({ "website": website });
       let passwdgen = genPasswd.hashedPassword;
@@ -120,23 +143,61 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
       return generatedPassword;
     }
     catch (error) {
-      console.log('Fail to generate the Password:', error);
+      // console.log('Fail to generate the Password:', error);
+      toast.error('The password Exists');
       return error;
     }
   }
 
   const handleSave = () => {
-    if(generatedPassword != ''){
-      alert('Password Saved!');
+    if (generatedPassword != '') {
+      toast.success('Password Saved!');
       setWebsite('');
       setGeneratedPassword('');
       setIsAddDialogOpen(false);
+      loadPasswords();
     }
-    else{
-      alert('Please Generate the Password');
+    else {
+      toast.error('Please Generate the Password');
     }
   }
 
+  const handleview = async (oneId: string) => {
+    try {
+      let password = await getOnePassword(oneId);
+      setPasswordId(password.genPassword);
+    } catch (error) {
+      // console.log("Error Fetching One Password:", error);
+      toast.error("Something Went Wrong");
+    }
+  }
+
+  const handleDelete = async (deleteId: string) => {
+    try {
+      let deletedPassword = await deleteOnePassword(deleteId);
+      if (deletedPassword) {
+        loadPasswords();
+        toast.success(deletedPassword.message);
+      }
+    } catch (error) {
+      // console.log("Error Fetching One Password:", error);
+      toast.error("Something Went Wrong");
+    }
+  }
+
+  const handleEdit = async (updateId: string) => {
+    try {
+      let updatedPassword = await updateOnePassword(updateId);
+      if (updatedPassword) {
+        loadPasswords();
+        setPasswordId(updatedPassword.password);
+        toast.success(updatedPassword.message);
+      }
+    } catch (error) {
+      // console.log("Error Fetching One Password:", error);
+      toast.error("Something Went Wrong");
+    }
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-secondary/10">
       {/* Header */}
@@ -297,7 +358,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                 <div className="space-y-4 py-2">
                   <div>
                     <Label htmlFor="new-website" className='my-3' >Website</Label>
-                    <Input id="new-website" placeholder="example.com" value={website} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWebsite(e.target.value)}  required/>
+                    <Input id="new-website" placeholder="example.com" value={website} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWebsite(e.target.value)} required />
                   </div>
                   <div>
                     <Label htmlFor="new-username" className='my-3'>Username/Email</Label>
@@ -308,7 +369,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                     <Input id="new-password" type={showPassword ? "text" : "password"} placeholder="Your secure password" value={generatedPassword} />
                     <button
                       type="button"
-                      onClick={() => { copyToClipboard(generatedPassword); toast.success('Text Copied'); console.log('Toast Triggered!');}}
+                      onClick={() => { copyToClipboard(generatedPassword); toast.success('Text Copied'); console.log('Toast Triggered!'); }}
                       className=" absolute right-10 top-72 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       {<Copy className="h-4 w-4" />}
@@ -322,7 +383,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                     </button>
                   </div>
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mt-5'>
-                    <Button className='w-50 bg-transparent text-white hover:text-black cursor-pointer md:w-full' onClick={() => { handleGenerate(); console.log(generatedPassword) }}>Generate <Key className='w-4 h-4' /></Button>
+                    <Button className='w-50 md:w-full' variant="ghost" onClick={() => { handleGenerate(); }}>Generate <Key className='w-4 h-4' /></Button>
                     <Button className='w-50 cursor-pointer md:w-full' onClick={() => { handleSave() }}>Save Password</Button>
                   </div>
                 </div>
@@ -366,9 +427,9 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                           {/* <p className="text-sm text-muted-foreground">{password.username}</p> */}
                           <div className="flex items-center space-x-2 mt-1">
                             {/* <StrengthIcon className={`h-4 w-4 ${getStrengthColor(password.strength)}`} /> */}
-                            {/* <span className={`text-xs capitalize ${getStrengthColor(password.strength)}`}> */}
-                            {/* {password.strength} */}
-                            {/* </span> */}
+                            {/* <span className={`text-xs capitalize ${getStrengthColor(password.strength)}`}>
+                            {password.strength}
+                            </span> */}
                             {/* <span className="text-xs text-muted-foreground"> */}
                             {/* • Last used {password.lastUsed} */}
                             {/* </span> */}
@@ -381,9 +442,11 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setShowPasswordId(
-                              showPasswordId === password.id ? null : password.id
-                            )}
+                            onClick={() => {
+                              setShowPasswordId(
+                                showPasswordId === password.id ? null : password.id
+                              ); handleview(password.id)
+                            }}
                           >
                             {showPasswordId === password.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </Button>
@@ -409,12 +472,16 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
                             <DropdownMenuItem>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
+                              <Button variant="ghost" onClick={() => handleEdit(password.id)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              <Button variant='ghost' onClick={() => handleDelete(password.id)}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </Button>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -432,14 +499,14 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
                         >
                           <div className="bg-accent/20 rounded-lg p-3 font-mono text-sm">
                             <div className="flex items-center justify-between">
-                              {/* <span>{password.password}</span> */}
-                              {/* <Button
+                              <span>{passwrodId}</span>
+                              <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => copyToClipboard(password.password)}
+                                onClick={() => copyToClipboard(passwrodId)}
                               >
                                 <Copy className="h-3 w-3" />
-                              </Button> */}
+                              </Button>
                             </div>
                           </div>
                         </motion.div>
@@ -472,7 +539,7 @@ export function Dashboard({ user, onLogout, passwords }: DashboardProps) {
           </motion.div>
         )}
       </div>
-      <Toaster richColors/>
+      <Toaster richColors />
     </div >
   );
 }
